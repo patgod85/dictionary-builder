@@ -4,5 +4,8 @@
     },
     "ru": {
         "widget": "Выберите маршрут"
+    },
+    "es": {
+        "widget": "Seleccione la ruta"
     }
 }

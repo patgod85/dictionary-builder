@@ -1,10 +1,23 @@
 {
     "name": "dictionary-builder",
+    "author": "patgod85",
     "version": "0.0.1",
+    "main": "./src/app.js",
+    "license": "MIT",
+    "repository": "https://github.com/patgod85/dictionary-builder",
     "dependencies": {
-        "fs": "*",
-        "vow": "*",
-        "vow-fs": "*",
-        "yargs": "*"
+        "fs": "0.0.2",
+        "vow": "^0.4.12",
+        "vow-fs": "^0.3.4",
+        "yargs": "^4.1.0"
+    },
+    "devDependencies": {
+        "chai": "^3.5.0",
+        "chai-as-promised": "^5.2.0",
+        "mocha": "^2.4.5",
+        "q": "^1.4.1"
+    },
+    "scripts": {
+        "test": "mocha test"
     }
 }
