@@ -95,13 +95,15 @@ module.exports = function(argv) {
                     }
                 }
 
-                vfs.write(argv.o + '/main.json', JSON.stringify(dictionary))
+                vfs.write(argv.o + '/main.json', JSON.stringify(dictionary, null, 4))
                     .then(function () {
 
                         resolve('done:' + argv.o + '/main.json');
                     });
-            }
-        );
+            })
+            .catch(function(err){
+                console.log(err);
+            })
     });
 };
 

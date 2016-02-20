@@ -1,8 +1,34 @@
 var builder = require('../src/builder');
 
+var inputDir = "./test/resources/example/component",
+    outputDir = "./test/resources/example/l10n",
+    outputFile = "./test/resources/example/l10n/main.json",
+    expectedFile = "./test/resources/example/l10n/expected.json";
+
+var vfs = require("vow-fs");
+
 describe('builder', function () {
     it('run builder', function (done) {
-        builder({i: "./test/resources/example/component", o: "./test/resources/example/l10n"})
-            .should.become("done:./test/resources/example/l10n/main.json").and.notify(done);
+
+        function a() {
+
+            vfs.read(expectedFile)
+                .then(function (expectedContent) {
+                    return expectedContent.toString().replace(/\r/g, '');
+                })
+                .then(function (expectedResultToString) {
+
+                    vfs.read(outputFile)
+                        .then(function (outputContent) {
+                            return outputContent.toString().replace(/\r/g, '');
+                        })
+                        .should.become(expectedResultToString).and.notify(done);
+                });
+        }
+
+        builder({i: inputDir, o: outputDir})
+            .should.become("done:" + outputFile).and.notify(a);
     });
+
 });
+
