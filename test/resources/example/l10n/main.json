@@ -1,5 +1,8 @@
 {
     "en": {
+        "none": {
+            "a": "b"
+        },
         "breadcrumbs": {
             "widget": "Select a route"
         },
