@@ -5,7 +5,10 @@
         },
         "toolbar": {
             "form": {
-                "places_range": "Places range"
+                "places_range": "Places range",
+                "validation": {
+                    "too_long": "Value is too long"
+                }
             },
             "user": {
                 "session": {
@@ -20,7 +23,10 @@
         },
         "toolbar": {
             "form": {
-                "places_range": "Диапазон мест"
+                "places_range": "Диапазон мест",
+                "validation": {
+                    "too_long": "Значение слишком длинное"
+                }
             },
             "user": {
                 "session": {
