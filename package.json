@@ -19,7 +19,8 @@
         "chai": "^3.5.0",
         "chai-as-promised": "^5.2.0",
         "mocha": "^2.4.5",
-        "q": "^1.4.1"
+        "q": "^1.4.1",
+        "rimraf": "^2.5.2"
     },
     "scripts": {
         "test": "mocha test",
