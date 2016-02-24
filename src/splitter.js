@@ -1,102 +1,131 @@
-var vfs = require('vow-fs');
-var fs = require('vow-fs');
-
-var outputDir = '../test/resources/example/component';
-
-var resultDir = '../test/resources/example/splitted';
-
 var mkdirp = require('mkdirp');
 
+var vow = require('vow');
+var vfs = require('vow-fs');
+
+var argv;
+
+
 /**
- * TODO: promises
  * TODO: Tests
  * TODO: Error messages
  */
 
-function look(testPath, path, item, content){
+function look(testPath, path, item, content) {
 
-    vfs.isFile(testPath)
-        .then(function(){
+    return new vow.Promise(function (resolve, reject) {
 
-            console.log('YEs', testPath, content);
-            var newPath = testPath.replace(outputDir, resultDir);
-            mkdirp(newPath.replace(/[\/\\]\w+\.json$/, ''), function(err){
+        vfs.isFile(testPath)
+            .then(function () {
 
-                if(err){
-                    throw err;
-                }
-                vfs.write(newPath, JSON.stringify(content, null, 4))
-                    .then(function(){
-                        console.log('YESS!', arguments);
+                //console.log('YEs', testPath, content);
+                var newPath = testPath.replace(argv.model, argv.o);
+                mkdirp(newPath.replace(/[\/\\]\w+\.json$/, ''), function (err) {
 
-                    })
-                    .catch(function(err){
-                        console.warn(err);
-                    });
+                    if (err) {
+                        throw err;
+                    }
+                    vfs.write(newPath, JSON.stringify(content, null, 4))
+                        .then(function () {
+                            //console.log('YESS!', arguments);
+
+                            resolve();
+                        })
+                        .catch(reject);
+                });
+            })
+            .catch(function () {
+                processLevel(path + '/' + item, content)
+                    .then(resolve)
+                    .catch(reject);
             });
-        })
-        .catch(function(){
-            processLevel(path + '/' + item, content)
-        });
-}
-
-function processLevelItem(path, item, content){
-
-    var testPath = path + '/' + item + '.json';
-    look(testPath, path, item, content);
-
-}
-
-function processLevel(path, content){
-    if( typeof content === 'string' || path.match(/index$/)){
-        return;
-    }
-
-    var secondLevelTokensKeys = [],
-        secondLevelTokens = {};
-
-    for(var lang in content){
-        if(content.hasOwnProperty(lang)){
-            for(var i in content[lang]){
-                if(content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string'){
-                    secondLevelTokensKeys.push(i);
-                }
-            }
-        }
-    }
-
-    if(!secondLevelTokensKeys.length){
-        return;
-    }
-
-    for(i = 0; i < secondLevelTokensKeys.length; i++){
-
-        for(lang in content) {
-            if(content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])){
-                if(!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])){
-                    secondLevelTokens[secondLevelTokensKeys[i]] = {};
-                }
-
-                secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
-            }
-        }
-
-    }
-
-    for(i in secondLevelTokens){
-        if(secondLevelTokens.hasOwnProperty(i)){
-            processLevelItem(path, i, secondLevelTokens[i]);
-        }
-    }
-
-    processLevelItem(path, 'index', content);
-}
-
-vfs.read('../test/resources/example/l10n/main.json')
-    .then(function(content){
-
-        processLevel(outputDir, JSON.parse(content.toString()));
-    })
-    .catch(function(err){
-        console.warn('!!', err);
     });
+}
+
+function processLevelItem(path, item, content) {
+
+    return new vow.Promise(function (resolve, reject) {
+
+        var testPath = path + '/' + item + '.json';
+        look(testPath, path, item, content)
+            .then(resolve)
+            .catch(reject);
+    });
+
+
+}
+
+function processLevel(path, content) {
+
+    return new vow.Promise(function(resolve){
+
+        if (typeof content === 'string' || path.match(/index$/)) {
+            resolve();
+        }
+
+        var secondLevelTokensKeys = [],
+            secondLevelTokens = {};
+
+        for (var lang in content) {
+            if (content.hasOwnProperty(lang)) {
+                for (var i in content[lang]) {
+                    if (content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string') {
+                        secondLevelTokensKeys.push(i);
+                    }
+                }
+            }
+        }
+
+        if (!secondLevelTokensKeys.length) {
+            resolve();
+        }
+
+        for (i = 0; i < secondLevelTokensKeys.length; i++) {
+
+            for (lang in content) {
+                if (content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])) {
+                    if (!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])) {
+                        secondLevelTokens[secondLevelTokensKeys[i]] = {};
+                    }
+
+                    secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
+                }
+            }
+
+        }
+
+        var all = [];
+
+        for (i in secondLevelTokens) {
+            if (secondLevelTokens.hasOwnProperty(i)) {
+                all.push(processLevelItem(path, i, secondLevelTokens[i]));
+            }
+        }
+
+        all.push(processLevelItem(path, 'index', content));
+
+        return vow.all(all).then(resolve);
+    });
+}
+
+module.exports = function (_argv) {
+
+    argv = _argv;
+
+    argv.model = argv.model || argv.o;
+
+    return new vow.Promise(function (resolve, reject) {
+
+        vfs.read(argv.i)
+            .then(function (content) {
+
+                processLevel(argv.model, JSON.parse(content.toString()))
+                    .then(function () {
+                        resolve('done:' + argv.o);
+                    })
+                    .catch(reject);
+            })
+            .catch(reject);
+    });
+
+};

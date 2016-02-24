@@ -32,3 +32,27 @@ describe('builder', function () {
 
 });
 
+describe('splitter', function () {
+    it('run splitter', function (done) {
+
+        function a() {
+
+            vfs.read(expectedFile)
+                .then(function (expectedContent) {
+                    return expectedContent.toString().replace(/\r/g, '');
+                })
+                .then(function (expectedResultToString) {
+
+                    vfs.read(outputFile)
+                        .then(function (outputContent) {
+                            return outputContent.toString().replace(/\r/g, '');
+                        })
+                        .should.become(expectedResultToString).and.notify(done);
+                });
+        }
+
+        builder({i: inputDir, o: outputDir})
+            .should.become("done:" + outputFile).and.notify(a);
+    });
+
+});

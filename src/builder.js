@@ -62,7 +62,8 @@ function injectIntoJson(o, path, value) {
 }
 
 module.exports = function(argv) {
-    return new Promise(function (resolve) {
+//console.log(argv);
+    return new vow.Promise(function (resolve, reject) {
         scanDir(argv.i)
             .then(function (structuredResult) {
 
@@ -101,9 +102,7 @@ module.exports = function(argv) {
                         resolve('done:' + argv.o + '/main.json');
                     });
             })
-            .catch(function(err){
-                console.log(err);
-            })
+            .catch(reject)
     });
 };
 
