@@ -1,7 +1,7 @@
 {
     "name": "dictionary-builder",
     "author": "patgod85",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "main": "./src/app.js",
     "license": "MIT",
     "repository": "https://github.com/patgod85/dictionary-builder",
@@ -25,6 +25,6 @@
     "scripts": {
         "test": "mocha test",
         "build": "node ./src/app -i ./test/resources/example/component -o ./test/resources/example/l10n",
-        "split": "node ./src/app -i ./test/resources/example/l10n/expected.json -o ./test/resources/example/splitted --model ./test/resources/example/component --source dictionary"
+        "split": "node ./src/app -i ./test/resources/example/l10n/expected.json -o ./test/resources/example/splitted --model ./test/resources/example/component --source dictionary --chapterFileMask *.json"
     }
 }
