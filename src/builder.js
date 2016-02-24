@@ -1,11 +1,10 @@
-
 var fs = require('fs');
 var vfs = require('vow-fs');
 var vow = require('vow');
 
 
 function processDirItem(path) {
-    return new vow.Promise(function (resolve) {
+    return new vow.Promise(function (resolve, reject) {
         return vfs.stat(path)
             .then(function (stats) {
                 if (stats.isDirectory()) {
@@ -15,34 +14,26 @@ function processDirItem(path) {
                     resolve(path);
                 }
             })
+            .catch(reject);
     });
 }
 
-var vReaddir = function (rootPath) {
-    return new vow.Promise(function (resolve, reject) {
-
-        fs.readdir(rootPath, function (err, files) {
-
-            if (err) {
-                reject()
-            }
-            resolve(files);
-        });
-    });
-};
-
 var scanDir = function (rootPath) {
 
-    return vReaddir(rootPath).then(function (files) {
-        var all = [];
-        for (var i = 0; i < files.length; i++) {
-            all.push(processDirItem(rootPath + '/' + files[i]));
-        }
-        return vow.all(all);
-    });
+    return vfs.listDir(rootPath)
+        .then(function (files) {
+            var all = [];
+            for (var i = 0; i < files.length; i++) {
+                all.push(processDirItem(rootPath + '/' + files[i]));
+            }
+            return vow.all(all);
+        })
+        .catch(function(){
+            throw "Fail to list directory: " + rootPath;
+        });
 };
 
-function clone(obj){
+function clone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
@@ -51,7 +42,7 @@ function injectIntoJson(o, path, value) {
     var currentPath = path.shift();
 
     if (path.length >= 1) {
-        if(typeof o[currentPath] === 'undefined'){
+        if (typeof o[currentPath] === 'undefined') {
             o[currentPath] = {};
         }
         injectIntoJson(o[currentPath], path, value);
@@ -61,10 +52,18 @@ function injectIntoJson(o, path, value) {
     }
 }
 
-module.exports = function(argv) {
-//console.log(argv);
+module.exports = function (argv) {
+
+    argv.chapterFileMask = argv.chapterFileMask || '*.json';
+
     return new vow.Promise(function (resolve, reject) {
-        scanDir(argv.i)
+        vfs.glob(argv.i + '/**/' + argv.chapterFileMask)
+            .then(function(files){
+                if(!files.length){
+                    reject("The model directory does not exist or contains no target files");
+                }
+                return scanDir(argv.i)
+            })
             .then(function (structuredResult) {
 
                 var paths = structuredResult.join(',').split(',').filter(function (x) {
@@ -100,7 +99,8 @@ module.exports = function(argv) {
                     .then(function () {
 
                         resolve('done:' + argv.o + '/main.json');
-                    });
+                    })
+                    .catch(reject);
             })
             .catch(reject)
     });

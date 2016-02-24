@@ -5,7 +5,7 @@ var inputDir = "./test/resources/example/component",
     outputDir = "./test/resources/example/l10n",
     outputFile = "./test/resources/example/l10n/main.json",
     expectedFile = "./test/resources/example/l10n/expected.json",
-    splitterInput = outputFile,
+    splitterInput = expectedFile,
     splitterDir = "./test/resources/example/splitted",
     splitterFileToCheck = '/toolbar/form.json';
 
@@ -13,17 +13,18 @@ var vfs = require("vow-fs");
 var fs = require("fs");
 var rimraf = require("rimraf");
 
-describe('builder', function () {
+describe('builder positive', function () {
 
     before(function(){
         try{
             fs.accessSync(outputFile);
             fs.unlinkSync(outputFile);
+            console.log("Main.json is removed");
         }
         catch (e){}
     });
 
-    it('run builder', function (done) {
+    it('works', function (done) {
 
         //assert.ok(true);done();
         function checkExpectation() {
@@ -48,7 +49,7 @@ describe('builder', function () {
 
 });
 
-describe('splitter', function () {
+describe('splitter positive', function () {
 
     before(function(){
         var dir = fs.readdirSync(splitterDir);
@@ -60,7 +61,7 @@ describe('splitter', function () {
         }
     });
 
-    it('run splitter', function (done) {
+    it('works', function (done) {
 
         //assert.ok(true);done();
         function checkExpectation() {
@@ -85,4 +86,38 @@ describe('splitter', function () {
             .should.become("done:" + splitterDir).and.notify(checkExpectation);
     });
 
+});
+
+describe('builder negative', function () {
+
+    it('fails with wrong input path', function (done) {
+
+        builder({i: 'wrong>* path', o: outputDir})
+            .should.be.rejectedWith("The model directory does not exist or contains no target files").and.notify(done);
+
+    });
+});
+
+describe('splitter negative', function () {
+
+    it('fails with wrong input path', function (done) {
+
+        splitter({i: 'wrong path', o: splitterDir, model: inputDir})
+            .should.be.rejected.and.notify(done);
+
+    });
+
+    it('fails with wrong model path', function (done) {
+
+        splitter({i: splitterInput, o: splitterDir, model: 'wrong path <*'})
+            .should.be.rejectedWith("The model directory does not exist or contains no target files").and.notify(done);
+
+    });
+
+    it('fails with wrong output path', function (done) {
+
+        splitter({i: splitterInput, o: 'wrong path <*', model: inputDir})
+            .should.be.rejectedWith("The output directory does not exists").and.notify(done);
+
+    });
 });

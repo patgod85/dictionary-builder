@@ -6,11 +6,6 @@ var vfs = require('vow-fs');
 var argv;
 
 
-/**
- * TODO: Tests
- * TODO: Error messages
- */
-
 function look(testPath, path, item, content) {
 
     return new vow.Promise(function (resolve, reject) {
@@ -57,7 +52,7 @@ function processLevelItem(path, item, content) {
 
 function processLevel(path, content) {
 
-    return new vow.Promise(function(resolve){
+    return new vow.Promise(function(resolve, reject){
 
         if (typeof content === 'string' || path.match(/index$/)) {
             resolve();
@@ -104,7 +99,9 @@ function processLevel(path, content) {
 
         all.push(processLevelItem(path, 'index', content));
 
-        return vow.all(all).then(resolve);
+        return vow.all(all)
+            .then(resolve)
+            .catch(reject);
     });
 }
 
@@ -113,10 +110,24 @@ module.exports = function (_argv) {
     argv = _argv;
 
     argv.model = argv.model || argv.o;
+    argv.chapterFileMask = argv.chapterFileMask || '*.json';
 
     return new vow.Promise(function (resolve, reject) {
 
-        vfs.read(argv.i)
+        vfs.glob(argv.model + '/**/' + argv.chapterFileMask)
+            .then(function(files){
+                if(!files.length){
+                    reject("The model directory does not exist or contains no target files");
+                }
+                return vfs.exists(argv.o);
+            })
+            .then(function(outputDirectoryIsExists){
+
+                if(!outputDirectoryIsExists){
+                    reject("The output directory does not exists");
+                }
+                return vfs.read(argv.i);
+            })
             .then(function (content) {
 
                 processLevel(argv.model, JSON.parse(content.toString()))
