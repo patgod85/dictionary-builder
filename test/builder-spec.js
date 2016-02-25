@@ -1,17 +1,15 @@
 var builder = require('../src/builder');
-var splitter = require('../src/splitter');
 
 var inputDir = "./test/resources/example/component",
     outputDir = "./test/resources/example/l10n",
     outputFile = "./test/resources/example/l10n/main.json",
     expectedFile = "./test/resources/example/l10n/expected.json",
-    splitterInput = expectedFile,
-    splitterDir = "./test/resources/example/splitted",
-    splitterFileToCheck = '/toolbar/form.json';
+    outputFileL10n = "./test/resources/example/l10n/main.l10n.json",
+    expectedFileL10n = "./test/resources/example/l10n/expected.l10n.json";
+
 
 var vfs = require("vow-fs");
 var fs = require("fs");
-var rimraf = require("rimraf");
 
 describe('builder positive', function () {
 
@@ -19,7 +17,7 @@ describe('builder positive', function () {
         try{
             fs.accessSync(outputFile);
             fs.unlinkSync(outputFile);
-            console.log("Main.json is removed");
+            console.log("Main.json is removed\n");
         }
         catch (e){}
     });
@@ -43,22 +41,21 @@ describe('builder positive', function () {
                 });
         }
 
-        builder({i: inputDir, o: outputDir})
+        builder({i: inputDir, o: outputFile})
             .should.become("done:" + outputFile).and.notify(checkExpectation);
     });
 
 });
 
-describe('splitter positive', function () {
+describe('builder with chapter file mask', function () {
 
     before(function(){
-        var dir = fs.readdirSync(splitterDir);
-
-        for(var i = 0; i < dir.length; i++){
-            if(dir[i] != '.gitignore'){
-                rimraf.sync(splitterDir + '/' + dir[i]);
-            }
+        try{
+            fs.accessSync(outputFileL10n);
+            fs.unlinkSync(outputFileL10n);
+            console.log("Main.l10n.json is removed\n");
         }
+        catch (e){}
     });
 
     it('works', function (done) {
@@ -66,15 +63,13 @@ describe('splitter positive', function () {
         //assert.ok(true);done();
         function checkExpectation() {
 
-            //done();
-            vfs.read(inputDir + splitterFileToCheck)
-
+            vfs.read(expectedFileL10n)
                 .then(function (expectedContent) {
                     return expectedContent.toString().replace(/\r/g, '');
                 })
                 .then(function (expectedResultToString) {
 
-                    vfs.read(splitterDir + splitterFileToCheck)
+                    vfs.read(outputFile)
                         .then(function (outputContent) {
                             return outputContent.toString().replace(/\r/g, '');
                         })
@@ -82,8 +77,8 @@ describe('splitter positive', function () {
                 });
         }
 
-        splitter({i: splitterInput, o: splitterDir, model: inputDir})
-            .should.become("done:" + splitterDir).and.notify(checkExpectation);
+        builder({i: inputDir, o: outputFileL10n, chapterFileMask: "*.l10n.json"})
+            .should.become("done:" + outputFile).and.notify(checkExpectation);
     });
 
 });
@@ -98,26 +93,3 @@ describe('builder negative', function () {
     });
 });
 
-describe('splitter negative', function () {
-
-    it('fails with wrong input path', function (done) {
-
-        splitter({i: 'wrong path', o: splitterDir, model: inputDir})
-            .should.be.rejected.and.notify(done);
-
-    });
-
-    it('fails with wrong model path', function (done) {
-
-        splitter({i: splitterInput, o: splitterDir, model: 'wrong path <*'})
-            .should.be.rejectedWith("The model directory does not exist or contains no target files").and.notify(done);
-
-    });
-
-    it('fails with wrong output path', function (done) {
-
-        splitter({i: splitterInput, o: 'wrong path <*', model: inputDir})
-            .should.be.rejectedWith("The output directory does not exists").and.notify(done);
-
-    });
-});

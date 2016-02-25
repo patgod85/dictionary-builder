@@ -8,7 +8,7 @@ npm install dictionary-builder
 Usage
 ===
 
-Building
+Building (merging)
 ---
 
 ```
@@ -31,15 +31,15 @@ component/
 To build main dictionary file from chapters use the next command:
 
 ```shell
-dictionary-builder -i ./test/resources/example/component -o ./test/resources/example/l10n
+dictionary-builder -i ./test/resources/example/component -o ./test/resources/example/l10n/main.json --chapterFileMask *.l10n.json
 ```
 
 **Parameters**
 
-- _-i_: REQUIRED. input folder;
-- _-o_: REQUIRED. output file;
-- _--chapterFileMask_: mask of chapter filename. By default used "*.json" 
-- _--source_: should be "chapter" for this process direction. Can be left blank
+- **-i** REQUIRED. input folder;
+- **-o** REQUIRED. output file;
+- **--chapterFileMask** mask of chapter filename. By default used "*.json" 
+- **--source** should be "chapter" for this process direction. Can be left blank
 
 Splitting 
 ---
@@ -54,11 +54,11 @@ dictionary-builder -i ./test/resources/example/l10n/expected.json -o ./test/reso
 
 **Parameters**
 
-- _-i_: REQUIRED. input file;
-- _-o_: REQUIRED. output folder;
-- _--source_: REQUIRED should be "dictionary" for this process direction
-- _--model_: folder with existing chapters. By default used _output folder_. Script will use chapters in model directory to recognize where the JSON-brunches should store.
-- _--chapterFileMask_: mask of chapter filename. By default used "*.json" 
+- **-i** REQUIRED. input file;
+- **-o** REQUIRED. output folder;
+- **--source** REQUIRED should be "dictionary" for this process direction
+- **--model** folder with existing chapters. By default used _output folder_. Script will use chapters in model directory to recognize where the JSON-brunches should store.
+- **--chapterFileMask** mask of chapter filename. By default used "*.json" 
 
 
 Мысли по организации файлов локализации нашего проекта с ReactJs

@@ -13,16 +13,17 @@ function look(testPath, path, item, content) {
         vfs.isFile(testPath)
             .then(function () {
 
-                //console.log('YEs', testPath, content);
                 var newPath = testPath.replace(argv.model, argv.o);
-                mkdirp(newPath.replace(/[\/\\]\w+\.json$/, ''), function (err) {
+                var p = newPath.replace(argv.chapterExtensionRegExp, '');
+//console.log('YEs', newPath, argv.chapterExtensionRegExp, p);
+                mkdirp(p, function (err) {
 
                     if (err) {
                         throw err;
                     }
                     vfs.write(newPath, JSON.stringify(content, null, 4))
                         .then(function () {
-                            //console.log('YESS!', arguments);
+                            console.log('File created (updated): ', newPath);
 
                             resolve();
                         })
@@ -41,7 +42,7 @@ function processLevelItem(path, item, content) {
 
     return new vow.Promise(function (resolve, reject) {
 
-        var testPath = path + '/' + item + '.json';
+        var testPath = path + '/' + item + argv.chapterFileExtension;
         look(testPath, path, item, content)
             .then(resolve)
             .catch(reject);
@@ -111,6 +112,10 @@ module.exports = function (_argv) {
 
     argv.model = argv.model || argv.o;
     argv.chapterFileMask = argv.chapterFileMask || '*.json';
+
+    argv.chapterFileExtension = argv.chapterFileMask.replace('*', '');
+
+    argv.chapterExtensionRegExp = new RegExp("[\\/\\\\][\\w\\\.]+" + argv.chapterFileExtension.replace(/\./g, '\\\.') + "$");
 
     return new vow.Promise(function (resolve, reject) {
 

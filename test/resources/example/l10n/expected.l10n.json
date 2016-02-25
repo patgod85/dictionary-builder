@@ -1,0 +1,16 @@
+{
+    "en": {
+        "toolbar": {
+            "form": {
+                "street": "A street"
+            }
+        }
+    },
+    "ru": {
+        "toolbar": {
+            "form": {
+                "street": "Улица"
+            }
+        }
+    }
+}

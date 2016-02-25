@@ -10,6 +10,9 @@
                     "too_long": "Value is too long"
                 }
             },
+            "form.l10n": {
+                "street": "A street"
+            },
             "user": {
                 "session": {
                     "logged_in": "You are logged in as"
@@ -27,6 +30,9 @@
                 "validation": {
                     "too_long": "Значение слишком длинное"
                 }
+            },
+            "form.l10n": {
+                "street": "Улица"
             },
             "user": {
                 "session": {

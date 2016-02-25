@@ -1,7 +1,7 @@
 var fs = require('fs');
 var vfs = require('vow-fs');
 var vow = require('vow');
-
+var argv;
 
 function processDirItem(path) {
     return new vow.Promise(function (resolve, reject) {
@@ -11,7 +11,12 @@ function processDirItem(path) {
                     resolve(scanDir(path));
                 }
                 else if (stats.isFile()) {
-                    resolve(path);
+                    if(argv.propertyPathRegExp.test(path)){
+                        resolve(path);
+                    }
+                    else{
+                        resolve("");
+                    }
                 }
             })
             .catch(reject);
@@ -52,9 +57,15 @@ function injectIntoJson(o, path, value) {
     }
 }
 
-module.exports = function (argv) {
+module.exports = function (_argv) {
+
+    argv = _argv;
 
     argv.chapterFileMask = argv.chapterFileMask || '*.json';
+
+    var chapterFileExtension = argv.chapterFileMask.replace('*', '');
+
+    argv.propertyPathRegExp = new RegExp("(\\/index)?" + chapterFileExtension.replace(/\./g, '\.') + "$");
 
     return new vow.Promise(function (resolve, reject) {
         vfs.glob(argv.i + '/**/' + argv.chapterFileMask)
@@ -69,21 +80,20 @@ module.exports = function (argv) {
                 var paths = structuredResult.join(',').split(',').filter(function (x) {
                     return !!x
                 });
-
                 var dictionary = {};
 
                 var files = [];
                 for (var i = 0; i < paths.length; i++) {
+                    console.log('Found file: ' + paths[i]);
                     var namespace = paths[i].replace(argv.i, '');
                     var item = {
                         filePath: paths[i],
                         content: JSON.parse(fs.readFileSync(paths[i]).toString()),
                         namespace: namespace,
-                        propertyPath: namespace.replace(/(\/index)?\.json/, '').replace(/^[\\\/]/, '').split(/[\\\/]/)
+                        propertyPath: namespace.replace(argv.propertyPathRegExp, '').replace(/^[\\\/]/, '').split(/[\\\/]/)
                     };
 
                     files.push(item);
-
 
                     for (var j in item.content) {
                         if (item.content.hasOwnProperty(j)) {
@@ -95,10 +105,10 @@ module.exports = function (argv) {
                     }
                 }
 
-                vfs.write(argv.o + '/main.json', JSON.stringify(dictionary, null, 4))
+                vfs.write(argv.o, JSON.stringify(dictionary, null, 4))
                     .then(function () {
 
-                        resolve('done:' + argv.o + '/main.json');
+                        resolve('done:' + argv.o);
                     })
                     .catch(reject);
             })

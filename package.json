@@ -1,10 +1,11 @@
 {
     "name": "dictionary-builder",
     "author": "patgod85",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "main": "./src/app.js",
     "license": "MIT",
     "repository": "https://github.com/patgod85/dictionary-builder",
+    "keywords": ["json", "merge", "split", "l10n"],
     "bin": {
         "dictionary-builder": "bin/dictionary-builder"
     },
@@ -24,7 +25,7 @@
     },
     "scripts": {
         "test": "mocha test",
-        "build": "node ./src/app -i ./test/resources/example/component -o ./test/resources/example/l10n",
+        "build": "node ./src/app -i ./test/resources/example/component -o ./test/resources/example/l10n/main.json --chapterFileMask *.json",
         "split": "node ./src/app -i ./test/resources/example/l10n/expected.json -o ./test/resources/example/splitted --model ./test/resources/example/component --source dictionary --chapterFileMask *.json"
     }
 }
