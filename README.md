@@ -45,7 +45,8 @@ Splitting
 ---
 
 The process of distribution of changes in main dictionary file to **existing chapters**. 
-The main purpose is to give the main file to manager who will correct the tokens and then apply changes to files in 
+Main file can be given to manager who will correct the tokens. 
+The main purpose of the tool is to apply changes in main file to files in 
 directories of components.
 
 ```shell
@@ -60,6 +61,85 @@ dictionary-builder -i ./test/resources/example/l10n/expected.json -o ./test/reso
 - **--model** folder with existing chapters. By default used _output folder_. Script will use chapters in model directory to recognize where the JSON-brunches should store.
 - **--chapterFileMask** mask of chapter filename. By default used "*.json" 
 
+Notes
+===
+
+If you have existing main dictionary file with all tokens in it then the tool is not fully appropriate for you. 
+The tool uses chapter_first approach. It means that you have to split your main file with directory structure manually. 
+Then the tool can have any price for you. Why?
+
+At first glance I have no ide how to split main file without any model. For example you have:
+
+```json
+{
+    "en": {
+        "toolbar": {
+            "user": {
+                "session": {
+                    "logged_in": "You are logged in as"
+                }
+            }
+        }
+    },
+... 
+```
+
+What structure of folders do you want at the end?
+
+```
+/l10n
+    toolbar/
+        user/
+            session.l10n.json
+```
+
+with 
+
+```json
+// l10n/toolbar/user/session.l10n.json
+{
+    "en": {
+        "logged_in": "You are logged in as"
+    },
+    ...
+}
+```
+
+OR
+
+
+```
+/l10n
+    toolbar.l10n.json
+```
+
+with 
+
+```json
+// l01n/toolbar.l10n.json
+{
+    "en": {
+        "user": {
+            "session": {
+                "logged_in": "You are logged in as"
+            }
+        }
+    },
+    ...
+}
+```
+
+Or any other combination? 
+
+May be the tool should use some kind on convention to solve the problem, but at the moment it doesn't.
+
+Steps of using:
+---
+
+ 1. Create chapters in some folders structure
+ 1. Run _build_
+ 1. Amend main.json
+ 1. Run _split_
 
 Мысли по организации файлов локализации нашего проекта с ReactJs
 ===

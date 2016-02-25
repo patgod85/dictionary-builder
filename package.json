@@ -1,7 +1,7 @@
 {
     "name": "dictionary-builder",
     "author": "patgod85",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "main": "./src/app.js",
     "license": "MIT",
     "repository": "https://github.com/patgod85/dictionary-builder",
