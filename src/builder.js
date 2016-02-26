@@ -105,12 +105,11 @@ module.exports = function (_argv) {
                     }
                 }
 
-                vfs.write(argv.o, JSON.stringify(dictionary, null, 4))
-                    .then(function () {
+                return vfs.write(argv.o, JSON.stringify(dictionary, null, 4));
+            })
+            .then(function () {
 
-                        resolve('done:' + argv.o);
-                    })
-                    .catch(reject);
+                resolve('done:' + argv.o);
             })
             .catch(reject)
     });

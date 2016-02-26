@@ -8,7 +8,6 @@ var inputDir = "./test/resources/example/component",
     expectedFileL10n = "./test/resources/example/l10n/expected.l10n.json";
 
 
-var vfs = require("vow-fs");
 var fs = require("fs");
 
 describe('builder positive', function () {
@@ -26,19 +25,10 @@ describe('builder positive', function () {
 
         //assert.ok(true);done();
         function checkExpectation() {
-
-            vfs.read(expectedFile)
-                .then(function (expectedContent) {
-                    return expectedContent.toString().replace(/\r/g, '');
-                })
-                .then(function (expectedResultToString) {
-
-                    vfs.read(outputFile)
-                        .then(function (outputContent) {
-                            return outputContent.toString().replace(/\r/g, '');
-                        })
-                        .should.become(expectedResultToString).and.notify(done);
-                });
+            var expectedContent = fs.readFileSync(expectedFile).toString().replace(/\r/g, '');
+            var resultContent = fs.readFileSync(outputFile).toString().replace(/\r/g, '');
+            assert.equal(expectedContent, resultContent);
+            done();
         }
 
         builder({i: inputDir, o: outputFile})
@@ -63,18 +53,10 @@ describe('builder with chapter file mask', function () {
         //assert.ok(true);done();
         function checkExpectation() {
 
-            vfs.read(expectedFileL10n)
-                .then(function (expectedContent) {
-                    return expectedContent.toString().replace(/\r/g, '');
-                })
-                .then(function (expectedResultToString) {
-
-                    vfs.read(outputFile)
-                        .then(function (outputContent) {
-                            return outputContent.toString().replace(/\r/g, '');
-                        })
-                        .should.become(expectedResultToString).and.notify(done);
-                });
+            var expectedContent = fs.readFileSync(expectedFileL10n).toString().replace(/\r/g, '');
+            var resultContent = fs.readFileSync(outputFileL10n).toString().replace(/\r/g, '');
+            assert.equal(expectedContent, resultContent);
+            done();
         }
 
         builder({i: inputDir, o: outputFileL10n, chapterFileMask: "*.l10n.json"})

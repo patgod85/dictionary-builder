@@ -9,84 +9,39 @@ var inputDir = "./test/resources/example/component",
     splitterFileToCheck = '/toolbar/form.json',
     splitterFileToCheckL10n = '/toolbar/form.l10n.json';
 
-var vfs = require("vow-fs");
 var fs = require("fs");
 var rimraf = require("rimraf");
 
-describe('splitter positive', function () {
+function cleanFolder(path){
 
-    before(function(){
-        var dir = fs.readdirSync(splitterDir);
+    var dir = fs.readdirSync(path);
 
-        for(var i = 0; i < dir.length; i++){
-            if(dir[i] != '.gitignore'){
-                rimraf.sync(splitterDir + '/' + dir[i]);
-            }
+    for(var i = 0; i < dir.length; i++){
+        if(dir[i] != '.gitignore'){
+            rimraf.sync(path + '/' + dir[i]);
         }
-    });
-
-    it('works', function (done) {
-
-        //assert.ok(true);done();
-        function checkExpectation() {
-
-            //done();
-            vfs.read(inputDir + splitterFileToCheck)
-
-                .then(function (expectedContent) {
-                    return expectedContent.toString().replace(/\r/g, '');
-                })
-                .then(function (expectedResultToString) {
-
-                    vfs.read(splitterDir + splitterFileToCheck)
-                        .then(function (outputContent) {
-                            return outputContent.toString().replace(/\r/g, '');
-                        })
-                        .should.become(expectedResultToString).and.notify(done);
-                });
-        }
-
-        splitter({i: splitterInput, o: splitterDir, model: inputDir})
-            .should.become("done:" + splitterDir).and.notify(checkExpectation);
-    });
-
-});
+    }
+}
 
 describe('splitter with chapter mask', function () {
 
-    before(function(){
-        var dir = fs.readdirSync(splitterDirL10n);
+    beforeEach(function(done){
+        cleanFolder(splitterDirL10n);
 
-        for(var i = 0; i < dir.length; i++){
-            if(dir[i] != '.gitignore'){
-                rimraf.sync(splitterDirL10n + '/' + dir[i]);
-            }
-        }
+        splitter({i: splitterInputL10n, o: splitterDirL10n, model: inputDir, chapterFileMask: "*.l10n.json"})
+            .should.become("done:" + splitterDirL10n).and.notify(done);
+
     });
 
     it('works', function (done) {
 
-        //assert.ok(true);done();
-        function checkExpectation() {
 
-            //done();
-            vfs.read(inputDir + splitterFileToCheckL10n)
+        var expectedContent = fs.readFileSync(inputDir + splitterFileToCheckL10n).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(splitterDirL10n + splitterFileToCheckL10n).toString().replace(/\r/g, '');
 
-                .then(function (expectedContent) {
-                    return expectedContent.toString().replace(/\r/g, '');
-                })
-                .then(function (expectedResultToString) {
+        assert.equal(expectedContent, resultContent);
+        done();
 
-                    vfs.read(splitterDirL10n + splitterFileToCheckL10n)
-                        .then(function (outputContent) {
-                            return outputContent.toString().replace(/\r/g, '');
-                        })
-                        .should.become(expectedResultToString).and.notify(done);
-                });
-        }
-
-        splitter({i: splitterInputL10n, o: splitterDirL10n, model: inputDir, chapterFileMask: "*.l10n.json"})
-            .should.become("done:" + splitterDirL10n).and.notify(checkExpectation);
     });
 
 });
@@ -113,4 +68,29 @@ describe('splitter negative', function () {
             .should.be.rejectedWith("The output directory does not exists").and.notify(done);
 
     });
+});
+
+describe('splitter positive', function () {
+
+    beforeEach(function(done){
+        cleanFolder(splitterDir);
+
+        splitter({i: splitterInput, o: splitterDir, model: inputDir})
+            .should.become("done:" + splitterDir).and.notify(done);
+    });
+
+    it('works', function (done) {
+
+        //assert.ok(true);done();
+        //function checkExpectation() {
+
+        var expectedContent = fs.readFileSync(inputDir + splitterFileToCheck).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(splitterDir + splitterFileToCheck).toString().replace(/\r/g, '');
+
+        assert.equal(expectedContent, resultContent);
+        done();
+        //}
+
+    });
+
 });

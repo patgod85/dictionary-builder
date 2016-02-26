@@ -5,32 +5,35 @@ var vfs = require('vow-fs');
 
 var argv;
 
+function mkdir(path){
+    return new vow.Promise(function(resolve, reject){
+        mkdirp(path, function (err) {
+            if (err) {
+                reject(err);
+            }
+            resolve();
+        });
+    });
+}
 
 function look(testPath, path, item, content) {
 
     return new vow.Promise(function (resolve, reject) {
 
+        var newPath = testPath.replace(argv.model, argv.o);
+
         vfs.isFile(testPath)
             .then(function () {
-
-                var newPath = testPath.replace(argv.model, argv.o);
                 var p = newPath.replace(argv.chapterExtensionRegExp, '');
-//console.log('YEs', newPath, argv.chapterExtensionRegExp, p);
-                mkdirp(p, function (err) {
-
-                    if (err) {
-                        throw err;
-                    }
-                    vfs.write(newPath, JSON.stringify(content, null, 4))
-                        .then(function () {
-                            console.log('File created (updated): ', newPath);
-
-                            resolve();
-                        })
-                        .catch(reject);
-                });
+                return mkdir(p);
             })
-            .catch(function () {
+            .then(function(){
+                return vfs.write(newPath, JSON.stringify(content, null, 4))
+            })
+            .then(function(){
+                resolve(newPath);
+            })
+            .catch(function() {
                 processLevel(path + '/' + item, content)
                     .then(resolve)
                     .catch(reject);
@@ -40,70 +43,58 @@ function look(testPath, path, item, content) {
 
 function processLevelItem(path, item, content) {
 
-    return new vow.Promise(function (resolve, reject) {
+    var testPath = path + '/' + item + argv.chapterFileExtension;
 
-        var testPath = path + '/' + item + argv.chapterFileExtension;
-        look(testPath, path, item, content)
-            .then(resolve)
-            .catch(reject);
-    });
-
-
+    return look(testPath, path, item, content);
 }
 
 function processLevel(path, content) {
 
-    return new vow.Promise(function(resolve, reject){
+    if (typeof content === 'string' || path.match(/index$/)) {
+        return vow.Promise.resolve();
+    }
 
-        if (typeof content === 'string' || path.match(/index$/)) {
-            resolve();
-        }
+    var secondLevelTokensKeys = [],
+        secondLevelTokens = {};
 
-        var secondLevelTokensKeys = [],
-            secondLevelTokens = {};
-
-        for (var lang in content) {
-            if (content.hasOwnProperty(lang)) {
-                for (var i in content[lang]) {
-                    if (content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string') {
-                        secondLevelTokensKeys.push(i);
-                    }
+    for (var lang in content) {
+        if (content.hasOwnProperty(lang)) {
+            for (var i in content[lang]) {
+                if (content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string') {
+                    secondLevelTokensKeys.push(i);
                 }
             }
         }
+    }
 
-        if (!secondLevelTokensKeys.length) {
-            resolve();
-        }
+    if (!secondLevelTokensKeys.length) {
+        return vow.Promise.resolve();
+    }
 
-        for (i = 0; i < secondLevelTokensKeys.length; i++) {
+    for (i = 0; i < secondLevelTokensKeys.length; i++) {
 
-            for (lang in content) {
-                if (content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])) {
-                    if (!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])) {
-                        secondLevelTokens[secondLevelTokensKeys[i]] = {};
-                    }
-
-                    secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
+        for (lang in content) {
+            if (content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])) {
+                if (!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])) {
+                    secondLevelTokens[secondLevelTokensKeys[i]] = {};
                 }
-            }
 
-        }
-
-        var all = [];
-
-        for (i in secondLevelTokens) {
-            if (secondLevelTokens.hasOwnProperty(i)) {
-                all.push(processLevelItem(path, i, secondLevelTokens[i]));
+                secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
             }
         }
+    }
 
-        all.push(processLevelItem(path, 'index', content));
+    var all = [];
 
-        return vow.all(all)
-            .then(resolve)
-            .catch(reject);
-    });
+    for (i in secondLevelTokens) {
+        if (secondLevelTokens.hasOwnProperty(i)) {
+            all.push(processLevelItem(path, i, secondLevelTokens[i]));
+        }
+    }
+
+    all.push(processLevelItem(path, 'index', content));
+
+    return vow.all(all);
 }
 
 module.exports = function (_argv) {
@@ -117,31 +108,29 @@ module.exports = function (_argv) {
 
     argv.chapterExtensionRegExp = new RegExp("[\\/\\\\][\\w\\\.]+" + argv.chapterFileExtension.replace(/\./g, '\\\.') + "$");
 
-    return new vow.Promise(function (resolve, reject) {
-
-        vfs.glob(argv.model + '/**/' + argv.chapterFileMask)
+    return vfs.glob(argv.model + '/**/' + argv.chapterFileMask)
             .then(function(files){
                 if(!files.length){
-                    reject("The model directory does not exist or contains no target files");
+                    throw "The model directory does not exist or contains no target files";
                 }
                 return vfs.exists(argv.o);
             })
             .then(function(outputDirectoryIsExists){
 
                 if(!outputDirectoryIsExists){
-                    reject("The output directory does not exists");
+                    throw "The output directory does not exists";
                 }
                 return vfs.read(argv.i);
             })
             .then(function (content) {
 
-                processLevel(argv.model, JSON.parse(content.toString()))
-                    .then(function () {
-                        resolve('done:' + argv.o);
-                    })
-                    .catch(reject);
+                return processLevel(argv.model, JSON.parse(content.toString()))
             })
-            .catch(reject);
-    });
+            .then(function (result) {
+                console.log("Files created (updated): ", result.toString().split(',').filter(function (x) {
+                    return !!x;
+                }));
+                return vow.Promise.resolve('done:' + argv.o);
+            })
 
 };
