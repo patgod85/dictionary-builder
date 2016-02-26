@@ -1,7 +1,11 @@
 {
     "en": {
         "breadcrumbs": {
-            "widget": "Select a route"
+            "items": {
+                "step1": "Select a route",
+                "step2": "Select a bus"
+            },
+            "widget": "select a route"
         },
         "toolbar": {
             "form": {
@@ -20,9 +24,18 @@
             }
         }
     },
+    "es": {
+        "breadcrumbs": {
+            "widget": "seleccione la ruta"
+        }
+    },
     "ru": {
         "breadcrumbs": {
-            "widget": "Выберите маршрут"
+            "items": {
+                "step1": "Выберите маршрут",
+                "step2": "Выберите автобус"
+            },
+            "widget": "выберите маршрут"
         },
         "toolbar": {
             "form": {
@@ -39,11 +52,6 @@
                     "logged_in": "Вы зашли как"
                 }
             }
-        }
-    },
-    "es": {
-        "breadcrumbs": {
-            "widget": "Seleccione la ruta"
         }
     }
 }

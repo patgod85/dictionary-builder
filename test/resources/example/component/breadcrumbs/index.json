@@ -1,11 +1,11 @@
 {
     "en": {
-        "widget": "Select a route"
+        "widget": "select a route"
     },
     "ru": {
-        "widget": "Выберите маршрут"
+        "widget": "выберите маршрут"
     },
     "es": {
-        "widget": "Seleccione la ruta"
+        "widget": "seleccione la ruta"
     }
 }

@@ -39,7 +39,7 @@ describe('splitter with chapter mask', function () {
         var expectedContent = fs.readFileSync(inputDir + splitterFileToCheckL10n).toString().replace(/\r/g, '');
         var resultContent = fs.readFileSync(splitterDirL10n + splitterFileToCheckL10n).toString().replace(/\r/g, '');
 
-        assert.equal(expectedContent, resultContent);
+        assert.equal(resultContent, expectedContent);
         done();
 
     });
@@ -79,17 +79,13 @@ describe('splitter positive', function () {
             .should.become("done:" + splitterDir).and.notify(done);
     });
 
-    it('works', function (done) {
+    it('works', function () {
 
-        //assert.ok(true);done();
-        //function checkExpectation() {
 
         var expectedContent = fs.readFileSync(inputDir + splitterFileToCheck).toString().replace(/\r/g, '');
         var resultContent = fs.readFileSync(splitterDir + splitterFileToCheck).toString().replace(/\r/g, '');
 
-        assert.equal(expectedContent, resultContent);
-        done();
-        //}
+        assert.equal(resultContent, expectedContent);
 
     });
 

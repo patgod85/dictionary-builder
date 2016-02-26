@@ -1,0 +1,10 @@
+{
+    "en": {
+        "step1": "Select a route",
+        "step2": "Select a bus"
+    },
+    "ru": {
+        "step1": "Выберите маршрут",
+        "step2": "Выберите автобус"
+    }
+}

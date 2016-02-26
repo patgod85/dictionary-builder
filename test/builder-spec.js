@@ -12,55 +12,50 @@ var fs = require("fs");
 
 describe('builder positive', function () {
 
-    before(function(){
-        try{
+    before(function (done) {
+        try {
             fs.accessSync(outputFile);
             fs.unlinkSync(outputFile);
             console.log("Main.json is removed\n");
         }
-        catch (e){}
-    });
-
-    it('works', function (done) {
-
-        //assert.ok(true);done();
-        function checkExpectation() {
-            var expectedContent = fs.readFileSync(expectedFile).toString().replace(/\r/g, '');
-            var resultContent = fs.readFileSync(outputFile).toString().replace(/\r/g, '');
-            assert.equal(expectedContent, resultContent);
-            done();
+        catch (e) {
         }
 
         builder({i: inputDir, o: outputFile})
-            .should.become("done:" + outputFile).and.notify(checkExpectation);
+            .should.become("done:" + outputFile).and.notify(done);
+    });
+
+    it('works', function () {
+
+        var expectedContent = fs.readFileSync(expectedFile).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(outputFile).toString().replace(/\r/g, '');
+        assert.equal(resultContent, expectedContent);
+
     });
 
 });
 
 describe('builder with chapter file mask', function () {
 
-    before(function(){
-        try{
+    before(function (done) {
+        try {
             fs.accessSync(outputFileL10n);
             fs.unlinkSync(outputFileL10n);
             console.log("Main.l10n.json is removed\n");
         }
-        catch (e){}
-    });
-
-    it('works', function (done) {
-
-        //assert.ok(true);done();
-        function checkExpectation() {
-
-            var expectedContent = fs.readFileSync(expectedFileL10n).toString().replace(/\r/g, '');
-            var resultContent = fs.readFileSync(outputFileL10n).toString().replace(/\r/g, '');
-            assert.equal(expectedContent, resultContent);
-            done();
+        catch (e) {
         }
 
         builder({i: inputDir, o: outputFileL10n, chapterFileMask: "*.l10n.json"})
-            .should.become("done:" + outputFile).and.notify(checkExpectation);
+            .should.become("done:" + outputFileL10n).and.notify(done);
+    });
+
+    it('works', function () {
+
+        var expectedContent = fs.readFileSync(expectedFileL10n).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(outputFileL10n).toString().replace(/\r/g, '');
+        assert.equal(resultContent, expectedContent);
+
     });
 
 });

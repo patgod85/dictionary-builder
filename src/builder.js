@@ -1,6 +1,7 @@
 var fs = require('fs');
 var vfs = require('vow-fs');
 var vow = require('vow');
+var sort = require('./sort');
 var argv;
 
 function processDirItem(path) {
@@ -50,11 +51,15 @@ function injectIntoJson(o, path, value) {
         if (typeof o[currentPath] === 'undefined') {
             o[currentPath] = {};
         }
-        injectIntoJson(o[currentPath], path, value);
+        o[currentPath] = injectIntoJson(o[currentPath], path, value);
     }
     else {
         o[currentPath] = value;
     }
+
+    o = sort(o);
+
+    return o;
 }
 
 module.exports = function (_argv) {
@@ -100,12 +105,12 @@ module.exports = function (_argv) {
                             if (!dictionary.hasOwnProperty(j)) {
                                 dictionary[j] = {};
                             }
-                            injectIntoJson(dictionary[j], item.propertyPath, item.content[j]);
+                            dictionary[j] = injectIntoJson(dictionary[j], item.propertyPath, item.content[j]);
                         }
                     }
                 }
 
-                return vfs.write(argv.o, JSON.stringify(dictionary, null, 4));
+                return vfs.write(argv.o, JSON.stringify(sort(dictionary), null, 4));
             })
             .then(function () {
 
