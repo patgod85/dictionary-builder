@@ -1,7 +1,7 @@
 var fs = require('fs');
 var vfs = require('vow-fs');
 var vow = require('vow');
-var sort = require('./sort');
+var helpers = require('./helpers');
 var argv;
 
 function processDirItem(path) {
@@ -39,12 +39,9 @@ var scanDir = function (rootPath) {
         });
 };
 
-function clone(obj) {
-    return JSON.parse(JSON.stringify(obj));
-}
 
 function injectIntoJson(o, path, value) {
-    path = clone(path);
+    path = helpers.clone(path);
     var currentPath = path.shift();
 
     if (path.length >= 1) {
@@ -57,7 +54,7 @@ function injectIntoJson(o, path, value) {
         o[currentPath] = value;
     }
 
-    o = sort(o);
+    o = helpers.sort(o);
 
     return o;
 }
@@ -110,7 +107,7 @@ module.exports = function (_argv) {
                     }
                 }
 
-                return vfs.write(argv.o, JSON.stringify(sort(dictionary), null, 4));
+                return vfs.write(argv.o, JSON.stringify(helpers.sort(dictionary), null, 4));
             })
             .then(function () {
 

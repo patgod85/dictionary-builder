@@ -6,7 +6,8 @@ var inputDir = "./test/resources/example/component",
     splitterInputL10n = "./test/resources/example/l10n/expected.l10n.json",
     splitterDir = "./test/resources/example/splitted",
     splitterDirL10n = "./test/resources/example/splitted-l10n",
-    splitterFileToCheck = '/toolbar/form.json',
+    splitterFileToCheck_1 = '/toolbar/form.json',
+    splitterFileToCheck_2 = '/breadcrumbs/index.json',
     splitterFileToCheckL10n = '/toolbar/form.l10n.json';
 
 var fs = require("fs");
@@ -79,11 +80,21 @@ describe('splitter positive', function () {
             .should.become("done:" + splitterDir).and.notify(done);
     });
 
-    it('works', function () {
+    it('works with single file', function () {
 
 
-        var expectedContent = fs.readFileSync(inputDir + splitterFileToCheck).toString().replace(/\r/g, '');
-        var resultContent = fs.readFileSync(splitterDir + splitterFileToCheck).toString().replace(/\r/g, '');
+        var expectedContent = fs.readFileSync(inputDir + splitterFileToCheck_1).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(splitterDir + splitterFileToCheck_1).toString().replace(/\r/g, '');
+
+        assert.equal(resultContent, expectedContent);
+
+    });
+
+    it('works with index file with other file', function () {
+
+
+        var expectedContent = fs.readFileSync(inputDir + splitterFileToCheck_2).toString().replace(/\r/g, '');
+        var resultContent = fs.readFileSync(splitterDir + splitterFileToCheck_2).toString().replace(/\r/g, '');
 
         assert.equal(resultContent, expectedContent);
 

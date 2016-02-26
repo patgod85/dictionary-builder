@@ -1,39 +1,28 @@
-var mkdirp = require('mkdirp');
+var helpers = require('./helpers');
 
 var vow = require('vow');
 var vfs = require('vow-fs');
 
 var argv;
 
-function mkdir(path){
-    return new vow.Promise(function(resolve, reject){
-        mkdirp(path, function (err) {
-            if (err) {
-                reject(err);
-            }
-            resolve();
-        });
-    });
-}
-
 function look(testPath, path, item, content) {
 
     return new vow.Promise(function (resolve, reject) {
 
         var newPath = testPath.replace(argv.model, argv.o);
-
         vfs.isFile(testPath)
             .then(function () {
                 var p = newPath.replace(argv.chapterExtensionRegExp, '');
-                return mkdir(p);
+                return helpers.mkdir(p);
             })
-            .then(function(){
+            .then(function () {
                 return vfs.write(newPath, JSON.stringify(content, null, 4))
             })
-            .then(function(){
-                resolve(newPath);
+            .then(function () {
+                console.log("File created (updated): ", newPath);
+                resolve(item);
             })
-            .catch(function() {
+            .catch(function () {
                 processLevel(path + '/' + item, content)
                     .then(resolve)
                     .catch(reject);
@@ -50,51 +39,74 @@ function processLevelItem(path, item, content) {
 
 function processLevel(path, content) {
 
-    if (typeof content === 'string' || path.match(/index$/)) {
-        return vow.Promise.resolve();
-    }
+    return new vow.Promise(function (resolve, reject) {
+        if (typeof content === 'string' || path.match(/index$/)) {
+            resolve();
+        }
 
-    var secondLevelTokensKeys = [],
-        secondLevelTokens = {};
+        var secondLevelTokensKeys = [],
+            secondLevelTokens = {};
 
-    for (var lang in content) {
-        if (content.hasOwnProperty(lang)) {
-            for (var i in content[lang]) {
-                if (content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string') {
-                    secondLevelTokensKeys.push(i);
+        for (var lang in content) {
+            if (content.hasOwnProperty(lang)) {
+                for (var i in content[lang]) {
+                    if (content[lang].hasOwnProperty(i) && secondLevelTokensKeys.indexOf(i) == -1 && typeof content[lang] != 'string') {
+                        secondLevelTokensKeys.push(i);
+                    }
                 }
             }
         }
-    }
 
-    if (!secondLevelTokensKeys.length) {
-        return vow.Promise.resolve();
-    }
+        if (!secondLevelTokensKeys.length) {
+            resolve();
+        }
 
-    for (i = 0; i < secondLevelTokensKeys.length; i++) {
+        for (i = 0; i < secondLevelTokensKeys.length; i++) {
 
-        for (lang in content) {
-            if (content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])) {
-                if (!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])) {
-                    secondLevelTokens[secondLevelTokensKeys[i]] = {};
+            for (lang in content) {
+                if (content.hasOwnProperty(lang) && content[lang].hasOwnProperty(secondLevelTokensKeys[i])) {
+                    if (!secondLevelTokens.hasOwnProperty(secondLevelTokensKeys[i])) {
+                        secondLevelTokens[secondLevelTokensKeys[i]] = {};
+                    }
+
+                    secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
                 }
-
-                secondLevelTokens[secondLevelTokensKeys[i]][lang] = content[lang][secondLevelTokensKeys[i]];
             }
         }
-    }
 
-    var all = [];
+        var all = [];
 
-    for (i in secondLevelTokens) {
-        if (secondLevelTokens.hasOwnProperty(i)) {
-            all.push(processLevelItem(path, i, secondLevelTokens[i]));
+        for (i in secondLevelTokens) {
+            if (secondLevelTokens.hasOwnProperty(i)) {
+                all.push(processLevelItem(path, i, secondLevelTokens[i]));
+            }
         }
-    }
 
-    all.push(processLevelItem(path, 'index', content));
+        vow.all(all)
+            .then(function (props) {
+                return vow.Promise.resolve(
+                    props.filter(function (x) {
+                        return !!x;
+                    })
+                );
+            })
+            .then(function (props) {
+                return vow.Promise.resolve(
+                    helpers.removeProps(content, props)
+                );
+            })
+            .then(function (_content) {
 
-    return vow.all(all);
+                if(helpers.isEmpty(_content)){
+                    resolve();
+                }
+                else{
+                    resolve(processLevelItem(path, 'index', content));
+                }
+            })
+            .catch(reject);
+
+    });
 }
 
 module.exports = function (_argv) {
@@ -109,28 +121,25 @@ module.exports = function (_argv) {
     argv.chapterExtensionRegExp = new RegExp("[\\/\\\\][\\w\\\.]+" + argv.chapterFileExtension.replace(/\./g, '\\\.') + "$");
 
     return vfs.glob(argv.model + '/**/' + argv.chapterFileMask)
-            .then(function(files){
-                if(!files.length){
-                    throw "The model directory does not exist or contains no target files";
-                }
-                return vfs.exists(argv.o);
-            })
-            .then(function(outputDirectoryIsExists){
+        .then(function (files) {
+            if (!files.length) {
+                throw "The model directory does not exist or contains no target files";
+            }
+            return vfs.exists(argv.o);
+        })
+        .then(function (outputDirectoryIsExists) {
 
-                if(!outputDirectoryIsExists){
-                    throw "The output directory does not exists";
-                }
-                return vfs.read(argv.i);
-            })
-            .then(function (content) {
+            if (!outputDirectoryIsExists) {
+                throw "The output directory does not exists";
+            }
+            return vfs.read(argv.i);
+        })
+        .then(function (content) {
 
-                return processLevel(argv.model, JSON.parse(content.toString()))
-            })
-            .then(function (result) {
-                console.log("Files created (updated): ", result.toString().split(',').filter(function (x) {
-                    return !!x;
-                }));
-                return vow.Promise.resolve('done:' + argv.o);
-            })
+            return processLevel(argv.model, JSON.parse(content.toString()))
+        })
+        .then(function () {
+            return vow.Promise.resolve('done:' + argv.o);
+        })
 
 };
